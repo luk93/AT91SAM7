@@ -1,0 +1,32 @@
+volatile int ii,jj;
+for (ii=0; ii<ms; ii++) {
+for (jj=3000; jj>0; jj--) {
+ __asm__("NOP");}}
+}
+
+int main(void)
+ {
+
+PMC_PCER = PMC_PCER_PIOA | PMC_PCER_PIOB;
+PIOB_PER = PIOB_ODR_P24|PIOB_ODR_P25;
+PIOB_ODR = PIOB_ODR_P24;
+PIOB_ODR = PIOB_ODR_P25;
+InitLCD();
+SetContrast(5);
+LCDClearScreen();
+Backlight(BL_ON);
+
+while(1){
+if((PIOB_PDSR&PIOB_PDSR_P24)==0){
+for(int k=1; k<100; k++)
+{
+LCDSetCircle(65,65,k,WHITE);
+wait(10);
+}
+}
+if((PIOB_PDSR & PIOB_PDSR_P25)==0){
+LCDClearScreen();
+LCDPutStr("ODSWIEZENIE", 50, 20, LARGE, WHITE, BLACK);
+}
+}
+}

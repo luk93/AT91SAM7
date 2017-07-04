@@ -1,0 +1,43 @@
+#include <targets\AT91SAM7.h>
+#define POWER1 PMC_PCER_PIOB
+#define POWER2 PMC_PCER_PIOA
+#define BL PIOB_PER_P20 
+#define B1 PIOB_ODR_P24 
+#define B2 PIOB_ODR_P25 
+#define BLOFF PIOB_CODR_P20
+#define BLON PIOB_SODR_P20
+#define J1 PIOA_ODR_P7
+#define J2 PIOA_ODR_P14
+
+void wait(int ms){
+volatile int ii, jj;
+for(ii=0; ii<ms; ii++){
+for(jj=300; jj>0; jj--){
+__asm__("NOP");}}}
+
+int main(void){
+PMC_PCER = POWER1;
+PMC_PCER = POWER2;
+PIOB_PER=BL|B1|B2;
+PIOB_OER=BL;
+PIOB_ODR=B1|B2;
+PIOB_CODR=BLOFF;
+
+while(1){
+if(((PIOA_PDSR&J1)==0) & ((PIOB_ODSR&BLON )==0))
+{
+for(int l=0; l<=300; l++){
+PIOB_CODR=BLON;
+wait(300-l);
+PIOB_SODR=BLON;
+wait(l);}
+}
+if(((PIOA_PDSR&J2)==0) & ((PIOB_ODSR&BLON )!=0))
+{
+wait(300);
+for(int k=0; k<=300; k++){
+PIOB_SODR=BLON;
+wait(300-k);
+PIOB_CODR=BLON;
+wait(k);}}
+}}

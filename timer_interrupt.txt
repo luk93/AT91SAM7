@@ -1,0 +1,20 @@
+#include <targets\AT91SAM7.h>
+
+int main(void){
+PMC_PCER=PMC_PCER_PIOB|PMC_PCER_TC0;
+PIOB_OER=PIOB_OER_P20;
+PIOB_CODR=PIOB_CODR_P20;
+PIOB_OWER=PIOB_OWER_P20;
+
+TC0_CCR = TC0_CCR_CLKDIS; //wylaczenie zegara
+TC0_IDR=0xFF; //obsluga przerwan = 0
+TC0_SR;//tylko do odczytu, pusty odczyt, ustawienie 0
+TC0_CMR=(1<<6); //ustawienie 1 na CLKDIS  
+TC0_CCR = TC0_CCR_CLKEN|TC0_CCR_SWTRG; //wlaczenie zegara, reset i wystartowanie zegara
+
+TC0_RC =0xFF;
+
+while(1){
+if((TC0_SR&TC0_SR_CPCS)!=0){ //sprawdzanie statusu TC0_SR i flagi porownania
+PIOB_ODSR^=PIOB_OER_P20;} //xor
+}}

@@ -1,0 +1,62 @@
+#include <targets\AT91SAM7.h>
+#include "pcf8833u8_lcd.h"
+#include <ctl_api.h>
+#define POWER2 PMC_PCER_PIOA
+#define J1 PIOA_ODR_P7
+#define J2 PIOA_ODR_P14
+#define J3 PIOA_ODR_P8
+#define J4 PIOA_ODR_P9
+
+void wait(int ms)
+{
+volatile int ii,jj;
+for (ii=0; ii<ms; ii++) {
+for (jj=3000; jj>0; jj--) {
+ __asm__("NOP");}}
+}
+int cyfry(){
+LCDClearScreen();
+LCDPutStr("1", 20, 20, LARGE, WHITE, BLACK);
+LCDPutStr("2", 20, 40, LARGE, WHITE, BLACK);
+LCDPutStr("4", 20, 60, LARGE, WHITE, BLACK);
+LCDPutStr("+", 20, 80, LARGE, WHITE, BLACK);
+LCDPutStr("4", 40, 20, LARGE, WHITE, BLACK);
+LCDPutStr("5", 40, 40, LARGE, WHITE, BLACK);
+LCDPutStr("6", 40, 60, LARGE, WHITE, BLACK);
+LCDPutStr("-", 40, 80, LARGE, WHITE, BLACK);
+LCDPutStr("7", 60, 20, LARGE, WHITE, BLACK);
+LCDPutStr("8", 60, 40, LARGE, WHITE, BLACK);
+LCDPutStr("9", 60, 60, LARGE, WHITE, BLACK);
+LCDPutStr("=", 60, 80, LARGE, WHITE, BLACK);
+}
+
+int main(void)
+ {
+char z[2];
+int k=0;
+int a;
+int w1, w2;
+int w3, w4;
+PMC_PCER = POWER2;
+PMC_PCER = PMC_PCER_PIOA | PMC_PCER_PIOB;
+PIOA_ODR = J1|J2|J3|J4;
+PIOB_PER = PIOB_ODR_P24|PIOB_ODR_P25;
+PIOB_ODR = PIOB_ODR_P24;
+PIOB_ODR = PIOB_ODR_P25;
+InitLCD();
+SetContrast(5);
+LCDClearScreen();
+Backlight(BL_ON);
+
+while(1){
+if((PIOA_PDSR & J3)==0){
+{
+cyfry();
+LCDSetRect(18,18, 36,36, RED, RED);
+}
+}
+if((PIOA_PDSR & J4)==0){
+cyfry();
+}
+}
+}

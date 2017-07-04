@@ -1,0 +1,38 @@
+#include <targets\AT91SAM7.h>
+#include "pcf8833u8_lcd.h"
+#include <ctl_api.h>
+
+void wait(int ms)
+{
+volatile int ii,jj;
+for (ii=0; ii<ms; ii++) {
+for (jj=3000; jj>0; jj--) {
+ __asm__("NOP");}}
+}
+int cyfry(){
+LCDClearScreen();
+}
+
+int main(void)
+ {
+int a;
+char z[2];
+PMC_PCER = PMC_PCER_ADC;
+ADC_CR = ADC_CR_SWRST;
+ADC_CHER = ADC_CHER_CH6;
+ADC_MR = (23<<ADC_MR_PRESCAL_BIT)|(1<<ADC_MR_SHTIM_BIT)|(2<<ADC_MR_STARTUP_BIT);
+InitLCD();
+SetContrast(5);
+LCDClearScreen();
+Backlight(BL_ON);
+
+while(1){
+ADC_CR = ADC_CR_START;
+if((ADC_SR&ADC_SR_EOC6)!=0){
+a = ADC_CDR6;
+itoa(a,z,10);
+LCDPutStr(z,50,20,LARGE,WHITE,BLACK);
+
+}
+}
+}

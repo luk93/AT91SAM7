@@ -1,0 +1,141 @@
+#include <targets\AT91SAM7.h>
+#include "pcf8833u8_lcd.h"
+#define lewo (1<<7)
+#define dol (1<<7)
+#define gora (1<<9)
+#define prawo (1<<14)
+#define srodek (1<<15)
+int w=0;
+int a,b;
+int p=0;
+int stan=0;
+char z[2];
+char y[2];
+
+int tablica(){
+LCDPutStr("T",50,5,LARGE,WHITE,BLACK); 
+LCDPutStr("1",50,55,LARGE,WHITE,BLACK);
+LCDPutStr("2",50,105,LARGE,WHITE,BLACK);
+}
+void wait(int ms)
+{
+volatile int ii,jj;
+for (ii=0; ii<ms; ii++) {
+for (jj=3000; jj>0; jj--) {
+ __asm__("NOP");}}
+}
+
+int main(void){
+InitLCD();                 
+SetContrast(5);
+LCDClearScreen();
+Backlight(BL_ON);
+
+PMC_PCER = PMC_PCER_PIOB|PMC_PCER_PIOA;
+PIOA_PER = lewo|prawo|dol|gora;
+PIOB_PER = PIOB_ODR_P24|PIOB_ODR_P25;
+PIOB_ODR = PIOB_ODR_P24;
+PIOB_ODR = PIOB_ODR_P25;
+
+PMC_PCER |= PMC_PCER_ADC;
+ADC_CR = ADC_CR_SWRST; 
+ADC_CHER = ADC_CHER_CH5;
+ADC_MR = (23<<ADC_MR_PRESCAL_BIT)|(1<<ADC_MR_SHTIM_BIT)|(2<<ADC_MR_STARTUP_BIT);
+
+PMC_PCER |= PMC_PCER_TC0;
+TC0_CCR = TC0_CCR_CLKDIS; 
+TC0_IDR = 0xFF; 
+TC0_SR;
+TC0_CMR = (1<<13); 
+TC0_CCR = TC0_CCR_CLKEN|TC0_CCR_SWTRG; 
+TC0_RC = 26855;
+p = 0;
+
+Backlight(BL_ON);
+while(stan==0){
+  tablica();
+
+  if(p==0){
+    LCDSetRect(45, 5, 70, 15, RED, RED);
+  }
+  if(p==1){
+    LCDSetRect(45, 55, 70, 65, RED, RED);
+  }
+  if(p==2){
+    LCDSetRect(45, 105, 70, 115, RED, RED);
+  }
+
+  if((PIOA_PDSR&prawo)==0 && p<2){
+    wait(20);
+    LCDClearScreen();
+    tablica();
+    p++;}
+  if((PIOA_PDSR&lewo)==0 && p>0){
+    wait(20);
+    LCDClearScreen();
+    tablica();
+    p--;}
+
+  if((PIOA_PDSR&srodek)==0 && p==0){
+    LCDPutStr("Wybrano 1",10,5,LARGE,WHITE,BLACK);
+    wait(100);
+    LCDClearScreen();
+    stan=1;
+    adc();
+    }
+  if((PIOA_PDSR&srodek)==0 && p==1){
+    LCDPutStr("Wybrano 2",10,5,LARGE,WHITE,BLACK);
+    }
+  if((PIOA_PDSR&srodek)==0 && p==2){
+    LCDPutStr("Wybrano 3",10,5,LARGE,WHITE,BLACK);
+    }
+}
+}
+void adc()
+{
+while(stan==1)
+{
+if((TC0_SR&TC0_SR_CPCS)!=0){
+ADC_CR = ADC_CR_START; 
+      if(ADC_SR&ADC_SR_EOC5){
+          if(w==1){
+            a = ADC_CDR5/2;
+            b = a%10;
+            itoa(b,y,10);
+            a = a/10;
+            itoa(a,z,10);
+            LCDSetRect(0,0, 25, 40, RED, RED);
+            LCDPutStr("T/K",5,5,LARGE,WHITE,BLACK); 
+            LCDSetRect(40,10, 70, 70, RED, RED);
+            LCDPutStr(z,50,20,LARGE,WHITE,BLACK);
+            LCDPutStr(y,50,40,LARGE,WHITE,BLACK);
+            LCDSetRect(60,37,62, 39, WHITE, WHITE);
+            LCDSetCircle(52, 52, 2, WHITE);
+            LCDPutStr("C",50,55,LARGE, WHITE, BLACK);
+          }
+          if(w==0){
+            a = ADC_CDR5/2 +2730;
+            b = a%10;
+            a = a/10;
+            itoa(b,y,10);
+            itoa(a,z,10);
+            LCDSetRect(0,0, 25, 40, RED, RED);
+            LCDPutStr("T/K",5,5,LARGE,WHITE,BLACK); 
+            LCDSetRect(40,10, 70, 70, RED, RED);
+            LCDPutStr(z,50,20,LARGE,WHITE,BLACK);
+            LCDPutStr(y,50,48,LARGE,WHITE,BLACK);
+            LCDSetRect(60,45,62, 47, WHITE, WHITE);
+            LCDPutStr("K",50,57,LARGE, WHITE, BLACK);}
+          }
+}
+if((PIOA_PDSR&dol)==0){
+LCDClearScreen();
+w = 0;}
+if((PIOA_PDSR&gora)==0){
+LCDClearScreen();
+w = 1;}
+if((PIOB_PDSR&PIOB_PDSR_P24)==0){
+LCDClearScreen();
+stan=0;}
+}
+}

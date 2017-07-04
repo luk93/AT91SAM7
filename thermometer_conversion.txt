@@ -1,0 +1,77 @@
+#include <targets\AT91SAM7.h>
+#include "pcf8833u8_lcd.h"
+
+int main(void){
+int a;
+int p;
+char z[2];
+int b;
+char y[2];
+InitLCD();                 
+SetContrast(5);
+LCDClearScreen();
+Backlight(BL_ON);
+
+PMC_PCER =   PMC_PCER_PIOB;
+PIOB_PER = PIOB_ODR_P24|PIOB_ODR_P25;
+PIOB_ODR = PIOB_ODR_P24;
+PIOB_ODR = PIOB_ODR_P25;
+
+PMC_PCER |= PMC_PCER_ADC;
+ADC_CR = ADC_CR_SWRST; 
+ADC_CHER = ADC_CHER_CH5;
+ADC_MR = (23<<ADC_MR_PRESCAL_BIT)|(1<<ADC_MR_SHTIM_BIT)|(2<<ADC_MR_STARTUP_BIT);
+
+PMC_PCER |= PMC_PCER_TC0;
+TC0_CCR = TC0_CCR_CLKDIS; 
+TC0_IDR = 0xFF; 
+TC0_SR;
+TC0_CMR = (1<<13); 
+TC0_CCR = TC0_CCR_CLKEN|TC0_CCR_SWTRG; 
+TC0_RC = 26855;
+Backlight(BL_ON);
+p = 0;
+
+while(1){
+
+if((TC0_SR&TC0_SR_CPCS)!=0){
+ADC_CR = ADC_CR_START; 
+      if(ADC_SR&ADC_SR_EOC5){
+          if(p==0){
+          a = ADC_CDR5/2;
+          b = a%10;
+          itoa(b,y,10);
+          a = a/10;
+          itoa(a,z,10);
+          LCDSetRect(0,0, 25, 40, RED, RED);
+          LCDPutStr("T/K",5,5,LARGE,WHITE,BLACK); 
+          LCDSetRect(40,10, 70, 70, RED, RED);
+          LCDPutStr(z,50,20,LARGE,WHITE,BLACK);
+          LCDPutStr(y,50,40,LARGE,WHITE,BLACK);
+          LCDSetRect(60,37,62, 39, WHITE, WHITE);
+          LCDSetCircle(52, 52, 2, WHITE);
+          LCDPutStr("C",50,55,LARGE, WHITE, BLACK);
+          }
+          if(p==1){
+          a = ADC_CDR5/2 +2730;
+          b = a%10;
+          a = a/10;
+          itoa(b,y,10);
+          itoa(a,z,10);
+          LCDSetRect(0,0, 25, 40, RED, RED);
+          LCDPutStr("T/K",5,5,LARGE,WHITE,BLACK); 
+          LCDSetRect(40,10, 70, 70, RED, RED);
+          LCDPutStr(z,50,20,LARGE,WHITE,BLACK);
+          LCDPutStr(y,50,48,LARGE,WHITE,BLACK);
+           LCDSetRect(60,45,62, 47, WHITE, WHITE);
+          LCDPutStr("K",50,57,LARGE, WHITE, BLACK);}
+          }
+          }
+
+if((PIOB_PDSR&PIOB_PDSR_P24)==0){
+LCDClearScreen();
+p = 0;}
+if((PIOB_PDSR&PIOB_PDSR_P25)==0){
+LCDClearScreen();
+p = 1;}
+}}

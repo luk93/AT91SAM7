@@ -1,0 +1,23 @@
+#include <targets\AT91SAM7.h>
+void wait(int ms){
+volatile int ii, jj;
+for(ii=0; ii<ms; ii++){
+for(jj=300; jj>0; jj--){
+__asm__("NOP");}}}
+
+int main(void){
+PMC_PCER = PMC_PCER_PIOB;
+PIOB_PER=PIOB_PER_P20|PIOB_PER_P24|PIOB_PER_P25;
+PIOB_OER=PIOB_OER_P20;
+PIOB_ODR=PIOB_ODR_P24|PIOB_ODR_P25;
+PIOB_CODR=PIOB_CODR_P20;
+while(1){
+if(((PIOB_PDSR&PIOB_PDSR_P24)==0) & ((PIOB_ODSR&PIOB_ODSR_P20 )==0))
+{
+PIOB_SODR=PIOB_SODR_P20;
+wait(100);}
+if(((PIOB_PDSR&PIOB_PDSR_P24)==0) & ((PIOB_ODSR&PIOB_ODSR_P20 )!=0))
+{
+PIOB_CODR=PIOB_CODR_P20;
+wait(100);}
+}}

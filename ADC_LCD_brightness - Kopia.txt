@@ -1,0 +1,41 @@
+#include <targets\AT91SAM7.h>
+#include "pcf8833u8_lcd.h"
+#include <ctl_api.h>
+
+
+
+void wait(int ms)
+{
+volatile int ii,jj;
+for (ii=0; ii<ms; ii++) {
+for (jj=10; jj>0; jj--) {
+ __asm__("NOP");}}
+}
+
+
+int main(void)
+ {
+int a;
+char z[2];
+PMC_PCER = PMC_PCER_ADC;//zasilanie adc
+ADC_CR = ADC_CR_SWRST; //reset adc
+ADC_CHER = ADC_CHER_CH6; //wlaczenie kanalu 5
+ADC_MR = (23<<ADC_MR_PRESCAL_BIT)|(1<<ADC_MR_SHTIM_BIT)|(2<<ADC_MR_STARTUP_BIT); //preskaler, sample&holdtime, startup
+InitLCD();                  //konfiguracja LCD
+SetContrast(5);
+LCDClearScreen();
+Backlight(BL_ON);
+
+while(1){
+ADC_CR = ADC_CR_START;    //start konwersji
+if((ADC_SR&ADC_SR_EOC6)!=0){          //sprawdzanie flagi eoc6 (end of conversion na kanale 5)
+a = ADC_CDR6;
+
+Backlight(BL_ON);
+wait(a);
+Backlight(BL_OFF);
+wait(1024-a);
+
+}
+}
+}
